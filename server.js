@@ -1,9 +1,11 @@
 require("dotenv").config(); //Allow environmental variables to be set on process.env should be at the top
 const express = require("express");
+const cors = require('cors');
 const app = express();
 
 //middleware
 app.use(express.json());  //parse json bodies in the request object
+app.use(cors());
 
 //redirect requests to endpoint starting with /posts to postRoutes.js
 app.use("/", require("./routes/variantRoutes"));

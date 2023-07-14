@@ -5,9 +5,27 @@ const db = require('../config/db');
 //get all variants
 exports.getAllVariants = async (req, res, next) => {
     try {
-        const query = 'SELECT * FROM tbl_variants_master';
+        const query = 'SELECT * FROM tbl_variants_master WHERE tfv_status_id = 1 ';
         const [rows, fields] = await db.query(query);
-        res.status(200).json({ count: rows.length, variants: rows });
+
+        let finalArr = []
+
+         let serialNum = 1
+        for(let row of rows) {
+          let obj = {
+            id: row.tfv_variant_id,
+            variants:row.tfv_variant_name,
+            description:row.tfv_variant_desc,
+            image:row.tfv_variant_image_link,
+            createdby:row.tfv_created_by,
+            createdDate: row.tfv_created_date_time,
+
+            serialNum: serialNum
+          }
+           serialNum++
+          finalArr.push(obj)
+        }
+        res.status(200).json({ count: rows.length, variants: finalArr });
     } catch (error) {
         console.log(error);
         next(error);
@@ -31,29 +49,31 @@ exports.getVariantById = async (req, res, next) => {
 exports.createVariant = async (req, res, next) => {
     try {
       const {
-        tfv_variant_name,
-        tfv_variant_image_link,
-        tfv_is_active,
-        tfv_status_id,
-        tfv_created_by,
-        tfv_updated_by
+        variants,
+        image,
+        isActive,
+        statusId,
+        createdBy,
+        updatedBy, 
+        description
       } = req.body;
   
       const currentDate = new Date();
       const query = `
         INSERT INTO tbl_variants_master 
-        (tfv_variant_name, tfv_variant_image_link, tfv_is_active, tfv_status_id, tfv_created_by, tfv_created_date_time, tfv_updated_by, tfv_updated_date_time)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (tfv_variant_name, tfv_variant_image_link, tfv_is_active, tfv_status_id, tfv_created_by, tfv_created_date_time, tfv_updated_by, tfv_updated_date_time, tfv_variant_desc)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const values = [
-        tfv_variant_name,
-        tfv_variant_image_link,
-        tfv_is_active,
-        tfv_status_id,
-        tfv_created_by,
+        variants,
+        image,
+        isActive,
+        statusId,
+        createdBy,
         currentDate,
-        tfv_updated_by,
-        currentDate
+        updatedBy,
+        currentDate,
+        description
       ];
   
       await db.query(query, values);
@@ -71,31 +91,30 @@ exports.updateVariantById = async (req, res, next) => {
     try {
       const variantId = req.params.id;
       const {
-        tfv_variant_name,
-        tfv_variant_image_link,
-        tfv_is_active,
-        tfv_status_id,
-        tfv_updated_by
+        variant,
+        image,
+        // isActive,
+        // statusId,
+        // updatedBy,
+        description
       } = req.body;
   
-      const currentDate = new Date();
+      // const currentDate = new Date();
       const query = `
         UPDATE tbl_variants_master
         SET tfv_variant_name = ?,
             tfv_variant_image_link = ?,
-            tfv_is_active = ?,
-            tfv_status_id = ?,
-            tfv_updated_by = ?,
-            tfv_updated_date_time = ?
+            tfv_variant_desc = ?
         WHERE tfv_variant_id = ?
       `;
       const values = [
-        tfv_variant_name,
-        tfv_variant_image_link,
-        tfv_is_active,
-        tfv_status_id,
-        tfv_updated_by,
-        currentDate,
+        variant,
+        image,
+        // isActive,
+        // statusId,
+        // updatedBy,
+        // currentDate,
+        description,
         variantId
       ];
   
@@ -111,7 +130,7 @@ exports.updateVariantById = async (req, res, next) => {
 exports.deleteVariantById = async (req, res, next) => {
     try {
         const variantId = req.params.id;
-        const query = `DELETE FROM tbl_variants_master WHERE tfv_variant_id = ${variantId}`;
+        const query = `UPDATE tbl_variants_master SET tfv_status_id = 0 WHERE tfv_variant_id = ${variantId}`;
         const [result] = await db.query(query);
         res.status(200).json({
             message: 'Variant deleted successfully',

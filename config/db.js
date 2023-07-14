@@ -8,7 +8,7 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD
 });
 
-console.log(pool)
+// console.log(pool)
 
 
 //let sql = "SELECT * FROM tbl_variants_master"
